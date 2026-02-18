@@ -10,8 +10,8 @@ namespace TaxiApp.Application.Services;
 
 public interface ICsvService
 {
-    IAsyncEnumerable<TaxiRideCsvModel> ImportEntitiesFromCsvAsync(string csvPath, CancellationToken ct);
-    Task WriteDuplicatesToCsvAsync(string duplicatesCsvPath, IReadOnlyCollection<TaxiRide> duplicates, CancellationToken ct);
+    IAsyncEnumerable<TaxiRideCsvModel> ImportEntitiesFromCsvAsync(string csvPath, CancellationToken ct = default);
+    Task WriteDuplicatesToCsvAsync(string duplicatesCsvPath, IReadOnlyCollection<TaxiRide> duplicates, CancellationToken ct = default);
 }
 
 public class CsvService : ICsvService
@@ -22,7 +22,7 @@ public class CsvService : ICsvService
     {
         _logger = logger;
     }
-    public async IAsyncEnumerable<TaxiRideCsvModel> ImportEntitiesFromCsvAsync(string csvPath, [EnumeratorCancellation] CancellationToken ct)
+    public async IAsyncEnumerable<TaxiRideCsvModel> ImportEntitiesFromCsvAsync(string csvPath, [EnumeratorCancellation] CancellationToken ct = default)
     {
         using var csvReader = new CsvReader(new StreamReader(csvPath), GetCsvConfiguration());
 
@@ -32,7 +32,7 @@ public class CsvService : ICsvService
         }
     }
 
-    public async Task WriteDuplicatesToCsvAsync(string duplicatesCsvPath, IReadOnlyCollection<TaxiRide> duplicates, CancellationToken cancellationToken)
+    public async Task WriteDuplicatesToCsvAsync(string duplicatesCsvPath, IReadOnlyCollection<TaxiRide> duplicates, CancellationToken ct = default)
     {
         using var writer = new StreamWriter(duplicatesCsvPath);
         using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
@@ -40,7 +40,7 @@ public class CsvService : ICsvService
         csv.WriteHeader<TaxiRide>();
         csv.NextRecord();
 
-        await csv.WriteRecordsAsync(duplicates, cancellationToken);
+        await csv.WriteRecordsAsync(duplicates, ct);
     }
 
     private CsvConfiguration GetCsvConfiguration()

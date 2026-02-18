@@ -18,4 +18,3 @@ public class TaxiRide
     public decimal FareAmount { get; set; }
     public decimal TipAmount { get; set; }
 }
-

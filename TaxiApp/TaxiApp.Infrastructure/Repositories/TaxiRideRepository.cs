@@ -13,7 +13,7 @@ public sealed class TaxiRideRepository : ITaxiRideRepository
     {
         _context = context;
     }
-    public async Task AddAsync(TaxiRide entity, CancellationToken ct)
+    public async Task AddAsync(TaxiRide entity, CancellationToken ct = default)
     {
         await _context.TaxiRides.AddAsync(entity, ct);
     }
@@ -51,7 +51,7 @@ public sealed class TaxiRideRepository : ITaxiRideRepository
             .ToListAsync(ct);
     }
 
-    public async Task SaveChangesAsync(CancellationToken ct)
+    public async Task SaveChangesAsync(CancellationToken ct = default)
     {
         await _context.SaveChangesAsync(ct);
     }
@@ -66,5 +66,3 @@ public sealed class TaxiRideRepository : ITaxiRideRepository
             .ToListAsync(ct);
     }
 }
-
-

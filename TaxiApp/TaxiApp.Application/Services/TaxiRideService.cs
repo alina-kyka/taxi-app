@@ -50,7 +50,7 @@ public class TaxiRideService : ITaxiRideService
         return rides.Select(x => x.ToTaxiRideModel()).ToList();
     }
 
-    public async Task<TaxiRideImportResult> ImportAndSaveToDbAsync(string inputCsvFilePath, string duplicatesCsvPath, CancellationToken ct)
+    public async Task<TaxiRideImportResult> ImportAndSaveToDbAsync(string inputCsvFilePath, string duplicatesCsvPath, CancellationToken ct = default)
     {
         var importResult = await SaveTaxiRidesToDbAndReturnDuplicatesAsync(
             _csvService.ImportEntitiesFromCsvAsync(inputCsvFilePath, ct), ct);
@@ -60,7 +60,7 @@ public class TaxiRideService : ITaxiRideService
         return importResult;
     }
 
-    private async Task<TaxiRideImportResult> SaveTaxiRidesToDbAndReturnDuplicatesAsync(IAsyncEnumerable<TaxiRideCsvModel> rideModels, CancellationToken cancellationToken = default)
+    private async Task<TaxiRideImportResult> SaveTaxiRidesToDbAndReturnDuplicatesAsync(IAsyncEnumerable<TaxiRideCsvModel> rideModels, CancellationToken ct = default)
     {
         HashSet<TaxiRideKey> uniqueTaxiRides = [];
         List<TaxiRide> duplicateTaxiRides = [];
@@ -82,11 +82,11 @@ public class TaxiRideService : ITaxiRideService
                 }
                 else
                 {
-                    await _taxiRideRepository.AddAsync(ride, cancellationToken);
+                    await _taxiRideRepository.AddAsync(ride, ct);
                 }
             }
 
-            await _taxiRideRepository.SaveChangesAsync(cancellationToken);
+            await _taxiRideRepository.SaveChangesAsync(ct);
 
             return new TaxiRideImportResult (duplicateTaxiRides, uniqueTaxiRides.Count);
         }
@@ -174,4 +174,3 @@ public class TaxiRideService : ITaxiRideService
         return true;
     }
 }
-
