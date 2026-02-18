@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using TaxiApp.Application.Models;
 using TaxiApp.Application.Repositories;
 using TaxiApp.Domain;
 using TaxiApp.Infrastructure.Contexts;
@@ -56,13 +57,13 @@ public sealed class TaxiRideRepository : ITaxiRideRepository
         await _context.SaveChangesAsync(ct);
     }
 
-    public async Task<IReadOnlyCollection<TaxiRide>> SearchAsync(Expression<Func<TaxiRide, bool>> predicate, int page, int pageSize, CancellationToken ct = default)
+    public async Task<IReadOnlyCollection<TaxiRide>> SearchAsync(TaxiRideSearchModel searchModel, CancellationToken ct = default)
     {
         return await _context.TaxiRides
-            .Where(predicate)
+            .Where(searchModel.Predicate)
             .OrderByDescending(x => x.PickupDateTimeUtc)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((searchModel.Page - 1) * searchModel.PageSize)
+            .Take(searchModel.PageSize)
             .ToListAsync(ct);
     }
 }

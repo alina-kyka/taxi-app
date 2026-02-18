@@ -3,17 +3,11 @@ using System.Globalization;
 using TaxiApp.Application.Mapping;
 using TaxiApp.Application.Models;
 using TaxiApp.Application.Repositories;
+using TaxiApp.Application.Services.Interfaces;
 using TaxiApp.Domain;
 
 namespace TaxiApp.Application.Services;
-public interface ITaxiRideService
-{
-    public Task<TaxiRideImportResult> ImportAndSaveToDbAsync(string inputCsvFilePath, string duplicatesCsvPath, CancellationToken ct = default);
-    public Task<int> GetLocationIdWithHighestAverageTipAsync(CancellationToken ct = default);
-    public Task<IReadOnlyCollection<decimal>> GetLongestFaresTripDistanceAsync(int topAmount = 100, CancellationToken ct = default);
-    public Task<IReadOnlyCollection<decimal>> GetLongestFaresTimeSpentTravelingAsync(int topAmount = 100, CancellationToken ct = default);
-    public Task<IReadOnlyCollection<TaxiRideModel>> GetTaxiRidesByPULocationIdAsync(int PULocationId, int page, int pageSize, CancellationToken ct = default);
-}
+
 public class TaxiRideService : ITaxiRideService
 {
     private readonly ICsvService _csvService;
@@ -42,20 +36,24 @@ public class TaxiRideService : ITaxiRideService
         return await _taxiRideRepository.GetLongestFaresTripDistanceAsync(topAmount, ct);
     }
 
-    public async Task<IReadOnlyCollection<TaxiRideModel>> GetTaxiRidesByPULocationIdAsync(int PULocationId, int page, int pageSize, 
+    public async Task<IReadOnlyCollection<TaxiRideModel>> GetTaxiRidesByPULocationIdAsync(TaxiRidesByPULocationIdRequestModel searchModel,
         CancellationToken ct = default)
     {
-        var rides = await _taxiRideRepository.SearchAsync(x => x.PULocationId == PULocationId, page, pageSize, ct);
+        var rides = await _taxiRideRepository.SearchAsync(
+            new TaxiRideSearchModel(x => x.PULocationId == searchModel.PULocationId, searchModel.Page, searchModel.PageSize), 
+            ct);
 
         return rides.Select(x => x.ToTaxiRideModel()).ToList();
     }
 
-    public async Task<TaxiRideImportResult> ImportAndSaveToDbAsync(string inputCsvFilePath, string duplicatesCsvPath, CancellationToken ct = default)
+    public async Task<TaxiRideImportResult> ImportAndSaveToDbAsync(TaxiRidesImportRequestModel requestModel, CancellationToken ct = default)
     {
         var importResult = await SaveTaxiRidesToDbAndReturnDuplicatesAsync(
-            _csvService.ImportEntitiesFromCsvAsync(inputCsvFilePath, ct), ct);
+            _csvService.ImportEntitiesFromCsvAsync(requestModel.InputCsvFilePath, ct), ct);
 
-        await _csvService.WriteDuplicatesToCsvAsync(duplicatesCsvPath, importResult.DuplicateRides, ct);
+        await _csvService.WriteDuplicatesToCsvAsync(
+            new TaxiRideWriteDuplicatesRequestModel (requestModel.DuplicatesCsvPath, importResult.DuplicateRides), 
+            ct);
 
         return importResult;
     }
