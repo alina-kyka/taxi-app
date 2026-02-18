@@ -4,15 +4,10 @@ using Microsoft.Extensions.Logging;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using TaxiApp.Application.Models;
+using TaxiApp.Application.Services.Interfaces;
 using TaxiApp.Domain;
 
 namespace TaxiApp.Application.Services;
-
-public interface ICsvService
-{
-    IAsyncEnumerable<TaxiRideCsvModel> ImportEntitiesFromCsvAsync(string csvPath, CancellationToken ct = default);
-    Task WriteDuplicatesToCsvAsync(string duplicatesCsvPath, IReadOnlyCollection<TaxiRide> duplicates, CancellationToken ct = default);
-}
 
 public class CsvService : ICsvService
 {
@@ -32,15 +27,15 @@ public class CsvService : ICsvService
         }
     }
 
-    public async Task WriteDuplicatesToCsvAsync(string duplicatesCsvPath, IReadOnlyCollection<TaxiRide> duplicates, CancellationToken ct = default)
+    public async Task WriteDuplicatesToCsvAsync(TaxiRideWriteDuplicatesRequestModel requestModel, CancellationToken ct = default)
     {
-        using var writer = new StreamWriter(duplicatesCsvPath);
+        using var writer = new StreamWriter(requestModel.DuplicatesCsvPath);
         using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
         csv.WriteHeader<TaxiRide>();
         csv.NextRecord();
 
-        await csv.WriteRecordsAsync(duplicates, ct);
+        await csv.WriteRecordsAsync(requestModel.Duplicates, ct);
     }
 
     private CsvConfiguration GetCsvConfiguration()
